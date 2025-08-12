@@ -18,6 +18,10 @@ export type Business = {
     name?: string;
     email?: string;
   };
+  location?: {
+    lat: number;
+    lng: number;
+  };
 };
 
 export type Message = {
@@ -29,4 +33,23 @@ export type Message = {
   recipientBusinessId: string;
   channel: 'customer' | 'b2b';
   content: string;
+};
+
+export type Review = {
+  id: string;
+  businessId: string;
+  createdAt: string; // ISO date
+  authorName: string;
+  rating: number; // 1-5 validated via zod
+  content?: string;
+};
+
+export type Promotion = {
+  id: string;
+  businessId: string;
+  title: string;
+  description?: string;
+  startDate?: string; // ISO date
+  endDate?: string; // ISO date
+  createdAt: string; // ISO date
 };

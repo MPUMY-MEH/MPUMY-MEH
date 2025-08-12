@@ -1,11 +1,16 @@
-import { getBusinessById } from '@/lib/db';
+import { getBusinessById, getPromotionsForBusiness, getReviewsForBusiness } from '@/lib/db';
 import { notFound } from 'next/navigation';
 import { SendMessageForm } from './send-message-form';
+import { AddReviewForm } from './add-review-form';
 
 export const dynamic = 'force-dynamic';
 
 export default async function BusinessProfile({ params }: { params: { id: string } }) {
-  const business = await getBusinessById(params.id);
+  const [business, reviews, promotions] = await Promise.all([
+    getBusinessById(params.id),
+    getReviewsForBusiness(params.id),
+    getPromotionsForBusiness(params.id),
+  ]);
   if (!business) return notFound();
 
   return (
@@ -41,9 +46,61 @@ export default async function BusinessProfile({ params }: { params: { id: string
                 </div>
               )}
             </div>
+
+            {business.location && (
+              <div className="mt-6">
+                <div className="text-sm font-semibold">Location</div>
+                <div className="mt-2 h-48 w-full overflow-hidden rounded-xl border bg-gray-50">
+                  <div className="p-3 text-sm text-gray-600">
+                    Lat: {business.location.lat.toFixed(4)}, Lng: {business.location.lng.toFixed(4)}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="mt-8">
+              <h2 className="text-lg font-semibold">Promotions</h2>
+              {promotions.length === 0 ? (
+                <div className="mt-2 text-sm text-gray-500">No promotions yet.</div>
+              ) : (
+                <ul className="mt-3 space-y-3">
+                  {promotions.map((p) => (
+                    <li key={p.id} className="rounded-xl border p-4">
+                      <div className="font-medium">{p.title}</div>
+                      {p.description && <div className="text-gray-600">{p.description}</div>}
+                      <div className="mt-1 text-xs text-gray-500">
+                        {p.startDate ? new Date(p.startDate).toLocaleDateString() : 'Now'}
+                        {p.endDate ? ` - ${new Date(p.endDate).toLocaleDateString()}` : ''}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="mt-8">
+              <h2 className="text-lg font-semibold">Reviews</h2>
+              {reviews.length === 0 ? (
+                <div className="mt-2 text-sm text-gray-500">No reviews yet.</div>
+              ) : (
+                <ul className="mt-3 space-y-3">
+                  {reviews.map((r) => (
+                    <li key={r.id} className="rounded-xl border p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="font-medium">{r.authorName}</div>
+                        <div className="text-sm text-gray-600">{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</div>
+                      </div>
+                      {r.content && <div className="mt-2 text-gray-700">{r.content}</div>}
+                      <div className="mt-1 text-xs text-gray-500">{new Date(r.createdAt).toLocaleString()}</div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
           <div className="w-full max-w-lg">
             <SendMessageForm businessId={business.id} />
+            <AddReviewForm businessId={business.id} />
           </div>
         </div>
       </div>
