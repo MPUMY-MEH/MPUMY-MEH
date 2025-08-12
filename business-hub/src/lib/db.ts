@@ -1,10 +1,12 @@
 import { promises as fs } from 'fs';
 import path from 'path';
-import { Business, Message } from './types';
+import { Business, Message, Review, Promotion } from './types';
 
 const dataDir = path.join(process.cwd(), 'data');
 const businessesFile = path.join(dataDir, 'businesses.json');
 const messagesFile = path.join(dataDir, 'messages.json');
+const reviewsFile = path.join(dataDir, 'reviews.json');
+const promotionsFile = path.join(dataDir, 'promotions.json');
 
 async function ensureDataFilesExist(): Promise<void> {
   await fs.mkdir(dataDir, { recursive: true });
@@ -27,7 +29,8 @@ async function ensureDataFilesExist(): Promise<void> {
         hours: 'Mon-Sun 11am - 10pm',
         logoUrl: '',
         heroUrl: '',
-        tags: ['casual', 'family-friendly']
+        tags: ['casual', 'family-friendly'],
+        location: { lat: 34.0901, lng: -118.4065 }
       },
       {
         id: 'fixit-garage',
@@ -44,7 +47,8 @@ async function ensureDataFilesExist(): Promise<void> {
         hours: 'Mon-Fri 8am - 6pm',
         logoUrl: '',
         heroUrl: '',
-        tags: ['ASE certified', 'oil change', 'brakes']
+        tags: ['ASE certified', 'oil change', 'brakes'],
+        location: { lat: 34.0912, lng: -118.4041 }
       },
       {
         id: 'petal-pushers',
@@ -61,7 +65,8 @@ async function ensureDataFilesExist(): Promise<void> {
         hours: 'Mon-Sat 9am - 7pm',
         logoUrl: '',
         heroUrl: '',
-        tags: ['delivery', 'weddings', 'plants']
+        tags: ['delivery', 'weddings', 'plants'],
+        location: { lat: 34.0889, lng: -118.4092 }
       }
     ];
     await fs.writeFile(businessesFile, JSON.stringify(seedBusinesses, null, 2), 'utf-8');
@@ -72,6 +77,20 @@ async function ensureDataFilesExist(): Promise<void> {
   } catch {
     const seedMessages: Message[] = [];
     await fs.writeFile(messagesFile, JSON.stringify(seedMessages, null, 2), 'utf-8');
+  }
+
+  try {
+    await fs.access(reviewsFile);
+  } catch {
+    const seedReviews: Review[] = [];
+    await fs.writeFile(reviewsFile, JSON.stringify(seedReviews, null, 2), 'utf-8');
+  }
+
+  try {
+    await fs.access(promotionsFile);
+  } catch {
+    const seedPromotions: Promotion[] = [];
+    await fs.writeFile(promotionsFile, JSON.stringify(seedPromotions, null, 2), 'utf-8');
   }
 }
 
@@ -96,6 +115,16 @@ export async function saveBusiness(business: Business): Promise<Business> {
   }
   await fs.writeFile(businessesFile, JSON.stringify(businesses, null, 2), 'utf-8');
   return business;
+}
+
+export async function updateBusinessPartial(id: string, update: Partial<Business>): Promise<Business | undefined> {
+  const businesses = await getBusinesses();
+  const index = businesses.findIndex((b) => b.id === id);
+  if (index < 0) return undefined;
+  const updated: Business = { ...businesses[index], ...update };
+  businesses[index] = updated;
+  await fs.writeFile(businessesFile, JSON.stringify(businesses, null, 2), 'utf-8');
+  return updated;
 }
 
 export async function searchBusinesses(query: string, category?: string): Promise<Business[]> {
@@ -124,4 +153,36 @@ export async function addMessage(message: Message): Promise<Message> {
   messages.push(message);
   await fs.writeFile(messagesFile, JSON.stringify(messages, null, 2), 'utf-8');
   return message;
+}
+
+export async function getReviewsForBusiness(businessId: string): Promise<Review[]> {
+  await ensureDataFilesExist();
+  const content = await fs.readFile(reviewsFile, 'utf-8');
+  const all = JSON.parse(content) as Review[];
+  return all.filter((r) => r.businessId === businessId);
+}
+
+export async function addReview(review: Review): Promise<Review> {
+  await ensureDataFilesExist();
+  const content = await fs.readFile(reviewsFile, 'utf-8');
+  const all = JSON.parse(content) as Review[];
+  all.push(review);
+  await fs.writeFile(reviewsFile, JSON.stringify(all, null, 2), 'utf-8');
+  return review;
+}
+
+export async function getPromotionsForBusiness(businessId: string): Promise<Promotion[]> {
+  await ensureDataFilesExist();
+  const content = await fs.readFile(promotionsFile, 'utf-8');
+  const all = JSON.parse(content) as Promotion[];
+  return all.filter((p) => p.businessId === businessId);
+}
+
+export async function addPromotion(promo: Promotion): Promise<Promotion> {
+  await ensureDataFilesExist();
+  const content = await fs.readFile(promotionsFile, 'utf-8');
+  const all = JSON.parse(content) as Promotion[];
+  all.push(promo);
+  await fs.writeFile(promotionsFile, JSON.stringify(all, null, 2), 'utf-8');
+  return promo;
 }

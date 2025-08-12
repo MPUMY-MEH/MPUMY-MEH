@@ -32,7 +32,8 @@ export async function POST(req: Request) {
     logoUrl: input.logoUrl,
     heroUrl: input.heroUrl,
     tags: input.tags,
-    ownerContact: input.ownerContact
+    ownerContact: input.ownerContact,
+    location: input.location,
   };
   await saveBusiness(business);
   return NextResponse.json(business, { status: 201 });
