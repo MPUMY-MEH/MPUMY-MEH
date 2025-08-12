@@ -1,0 +1,11 @@
+[
+  {
+    "id": "ce7e1d8c-6f34-4de6-935a-ead4ae59da72",
+    "createdAt": "2025-08-12T20:39:25.355Z",
+    "senderType": "customer",
+    "senderName": "Alex",
+    "recipientBusinessId": "bistro-bella",
+    "channel": "customer",
+    "content": "Hello! Are you open this Sunday?"
+  }
+]
